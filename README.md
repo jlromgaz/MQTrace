@@ -39,7 +39,7 @@ To run this project natively, your machine must have the following core dependen
 
 > **How to install these quickly:**
 > - **Windows (via Winget):** `winget install RubyInstallerTeam.RubyWithDevKit; winget install OpenJS.NodeJS; winget install PostgreSQL.PostgreSQL; winget install EclipseFoundation.Mosquitto`
-> - **Ubuntu/Debian:** `sudo apt update && sudo apt install ruby-full nodejs npm postgresql mosquitto`
+> - **Ubuntu/Debian:** `sudo apt update && sudo apt install -y build-essential libpq-dev ruby-full nodejs npm postgresql mosquitto`
 > - **macOS (via Homebrew):** `brew install ruby node postgresql mosquitto`
 
 ## 🚀 Quick Start (Running the Stack)
