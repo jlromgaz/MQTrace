@@ -14,7 +14,15 @@ To run this project, you must have the following installed on your system and av
 
 ## 🚀 Quick Start (Running the Stack)
 
-This repository includes OS-aware boot scripts that orchestrate the database checks, MQTT instances, and boot both Rails and the Frontend concurrently.
+This repository relies on **OS-Aware Boot Scripts**. Since MQTrace coordinates several layers (a Vite frontend, a Rails API backend, a PostgreSQL database, and an MQTT broker), we provide a unified boot sequence to orchestrate them.
+
+**Why do we have dual scripts?**
+To respect cross-platform environments, we follow the Open Source industry standard: Windows developers get a native PowerShell orchestrator, while Linux and macOS developers rely on a native POSIX Bash script. Both scripts act dynamically—meaning no physical paths are hardcoded—and perform the following strictly ordered sequence:
+
+1. **Intelligent Dependency Checks:** Safely inspects your system PATH to ensure `ruby` and `node` are available before attempting to boot.
+2. **Ghost PID Cleanup:** Defensively deletes any stale `mqtrace/tmp/pids/server.pid` files left behind by a previous `Ctrl+C` interrupt. This guarantees Rails will never hang quietly or throw `Address already in use` connection errors.
+3. **Infrastructure Layer:** Commands your native OS (`Start-Service` on Windows or `systemctl` / `brew services` on Unix) to boot Mosquitto and PostgreSQL.
+4. **Concurrent Launch:** Boots the Rails API and the Vite front-end GUI safely together using relative commands (`bundle exec rails server`).
 
 ### 🪟 Windows
 Open PowerShell in the root directory and execute:
