@@ -13,55 +13,19 @@
 //   6. Screen Filter        — global dropdown (lifted state in App.jsx)
 
 import { useMemo } from "react";
+import { usePlayback } from "../context/PlaybackContext";
 import "./AnalyticsPanel.css";
 
-// ----------------------------------------------------------------------------
-// Helper: compute all 6 metrics from the events array
-// useMemo in the parent will ensure this is only re-run when events changes.
-// ----------------------------------------------------------------------------
-function computeMetrics(events) {
-  const total = events.length;
-
-  if (total === 0) {
-    return {
-      total: 0,
-      mostPlayedVideo: "—",
-      mostActiveScreen: "—",
-      avgDuration: "—",
-      msgsPerMin: 0,
-      screenOptions: [],
-    };
-  }
-
-  // Count per asset_name
-  const assetCounts = events.reduce((acc, e) => {
-    acc[e.asset_name] = (acc[e.asset_name] || 0) + 1;
-    return acc;
-  }, {});
-  const mostPlayedVideo = Object.entries(assetCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
-
-  // Count per screen_id
-  const screenCounts = events.reduce((acc, e) => {
-    acc[e.screen_id] = (acc[e.screen_id] || 0) + 1;
-    return acc;
-  }, {});
-  const mostActiveScreen = Object.entries(screenCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
-
-  // Average duration
-  const totalDuration = events.reduce((acc, e) => acc + (Number(e.duration_secs) || 0), 0);
-  const avgDuration = (totalDuration / total).toFixed(1) + "s";
-
-  // Messages in the last 60 seconds
+// computeScreenOptions: derives filter options from the visible event window.
+// msgsPerMin is computed from the visible window too (last 60s activity).
+function computeLocalMetrics(events) {
+  const screenOptions = [...new Set(events.map((e) => e.screen_id))].sort();
   const oneMinAgo = Date.now() - 60_000;
   const msgsPerMin = events.filter((e) => {
     const ts = e.created_at || e.started_at;
     return ts && new Date(ts).getTime() > oneMinAgo;
   }).length;
-
-  // Unique screen IDs for the filter dropdown
-  const screenOptions = [...new Set(events.map((e) => e.screen_id))].sort();
-
-  return { total, mostPlayedVideo, mostActiveScreen, avgDuration, msgsPerMin, screenOptions };
+  return { screenOptions, msgsPerMin };
 }
 
 // ----------------------------------------------------------------------------
@@ -87,14 +51,19 @@ function KpiCard({ icon, label, value, accent }) {
 //   onScreenChange — callback to lift the filter state up to App.jsx
 // ----------------------------------------------------------------------------
 function AnalyticsPanel({ events, selectedScreen, onScreenChange }) {
-  const { total, mostPlayedVideo, mostActiveScreen, avgDuration, msgsPerMin, screenOptions } =
-    useMemo(() => computeMetrics(events), [events]);
+  // totalCount and aggregates come from the context accumulators —
+  // they are NEVER truncated by MAX_EVENTS, so they reflect all-time totals.
+  const { totalCount, aggregates } = usePlayback();
+  const { mostPlayedVideo, mostActiveScreen, avgDuration } = aggregates;
+
+  // Local metrics computed from the visible event window
+  const { screenOptions, msgsPerMin } = useMemo(() => computeLocalMetrics(events), [events]);
 
   return (
     <div className="analytics-panel">
       {/* ── Row 1: KPI Cards ─────────────────────────────────────── */}
       <div className="kpi-grid">
-        <KpiCard icon="📡" label="Total MQTT Messages" value={total.toLocaleString()} accent="blue" />
+        <KpiCard icon="📡" label="Total MQTT Messages" value={totalCount.toLocaleString()} accent="blue" />
         <KpiCard icon="🎬" label="Most Played Video"   value={mostPlayedVideo}          accent="purple" />
         <KpiCard icon="📺" label="Most Active Screen"  value={mostActiveScreen}         accent="green" />
         <KpiCard icon="⏱"  label="Avg Playback Duration" value={avgDuration}            accent="orange" />
