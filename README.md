@@ -5,12 +5,21 @@ Welcome to the **MQTrace** workspace! This is a full-stack real-time analytics a
 - `mqtrace/`: Ruby on Rails 8 API backend orchestrating PostgreSQL, ActionCable, and MQTT messaging.
 - `mqtrace-frontend/`: React + Vite frontend dashboard for real-time visualization. (React Native mobile migration in progress).
 
-## Prerequisites
-To run this project, you must have the following installed on your system and available in your global `PATH`:
-- **Ruby** (v3.2+)
-- **Node.js** (v18+) & **NPM**
-- **PostgreSQL**
-- **Mosquitto** (MQTT Broker)
+## 🛠️ System Prerequisites (Dependencies)
+To run this project natively, your machine must have the following core dependencies installed and exposed in your global system `PATH`:
+
+### 1. Core Languages
+- **Ruby (v3.2+)**: Required to run the Rails 8 API backend.
+- **Node.js (v18+) & NPM**: Required to run the Vite React dashboard.
+
+### 2. Infrastructure Services
+- **PostgreSQL (v14+)**: The primary relational database for persisting PlaybackEvents.
+- **Mosquitto**: The MQTT broker that handles the high-throughput publish/subscribe messaging queue.
+
+> **How to install these quickly:**
+> - **Windows (via Winget):** `winget install RubyInstallerTeam.RubyWithDevKit; winget install OpenJS.NodeJS; winget install PostgreSQL.PostgreSQL; winget install EclipseFoundation.Mosquitto`
+> - **Ubuntu/Debian:** `sudo apt update && sudo apt install ruby-full nodejs npm postgresql mosquitto`
+> - **macOS (via Homebrew):** `brew install ruby node postgresql mosquitto`
 
 ## 🚀 Quick Start (Running the Stack)
 

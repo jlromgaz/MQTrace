@@ -29,16 +29,14 @@ function formatDateTime(isoString) {
   return new Date(isoString).toLocaleString("en-GB", { hour12: false });
 }
 
-function HistoryTable() {
-  // State variables:
-  // events        → the array of event objects from the API
-  // loading       → true while the API request is in flight
-  // error         → holds the error message string if the request fails
-  // selectedScreen → the currently selected filter value
+// selectedScreen is now controlled by App.jsx via the AnalyticsPanel global filter.
+function HistoryTable({ selectedScreen = "" }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedScreen, setSelectedScreen] = useState("All");
+
+  // Convert the global filter value ("") to the API param format
+  const screenParam = selectedScreen || null;
 
   // useEffect with [selectedScreen] as dependency:
   // Runs on mount AND every time selectedScreen changes.
@@ -46,41 +44,21 @@ function HistoryTable() {
   // Java equivalent: calling the service method whenever a @SelectOneMenu
   // valueChangeListener fires, or a @ObservesAsync event arrives.
   useEffect(() => {
-    // setLoading(true) shows the loading state immediately when the filter changes.
     setLoading(true);
     setError(null);
-
-    // Build query params: if "All" is selected, send no screen_id filter.
-    const params = selectedScreen !== "All" ? { screen_id: selectedScreen } : {};
-
+    const params = screenParam ? { screen_id: screenParam } : {};
     getEvents(params)
-      .then((data) => {
-        setEvents(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        // err.message is the axios error message (e.g. "Network Error" if Rails is down)
-        setError(`Failed to load events: ${err.message}`);
-        setLoading(false);
-      });
-  }, [selectedScreen]); // Re-run this effect whenever selectedScreen changes.
+      .then((data) => { setEvents(data); setLoading(false); })
+      .catch((err) => { setError(`Failed to load events: ${err.message}`); setLoading(false); });
+  }, [screenParam]);
 
-  // Auto-refresh: re-fetch every 30 seconds to pick up new events.
-  // This is separate from the filter effect — it always runs regardless of filter.
   useEffect(() => {
-    // setInterval schedules a function to run repeatedly.
-    // Java equivalent: @Scheduled(fixedDelay = 30000)
     const interval = setInterval(() => {
-      const params = selectedScreen !== "All" ? { screen_id: selectedScreen } : {};
-      getEvents(params)
-        .then((data) => setEvents(data))
-        .catch(() => {}); // Silently ignore refresh errors — don't disrupt the UI.
+      const params = screenParam ? { screen_id: screenParam } : {};
+      getEvents(params).then((data) => setEvents(data)).catch(() => {});
     }, 30000);
-
-    // Cleanup: clear the interval when the component unmounts.
-    // Without this, the interval would keep firing even after the component is gone.
     return () => clearInterval(interval);
-  }, [selectedScreen]);
+  }, [screenParam]);
 
   // Render loading state.
   if (loading) {
@@ -106,19 +84,9 @@ function HistoryTable() {
     <div className="panel">
       <div className="panel-header">
         <h2>History</h2>
-        {/* Filter dropdown — "controlled component" pattern.
-            value={selectedScreen} ties the <select> to React state.
-            onChange updates state, which triggers a re-render AND the useEffect above.
-            Java equivalent: a bound <h:selectOneMenu> in JSF. */}
-        <select
-          className="screen-filter"
-          value={selectedScreen}
-          onChange={(e) => setSelectedScreen(e.target.value)}
-        >
-          {SCREENS.map((screen) => (
-            <option key={screen} value={screen}>{screen}</option>
-          ))}
-        </select>
+        {selectedScreen && (
+          <span className="event-count">Filtered: {selectedScreen}</span>
+        )}
       </div>
 
       {events.length === 0 ? (

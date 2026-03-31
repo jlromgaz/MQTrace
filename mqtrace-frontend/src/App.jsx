@@ -24,7 +24,7 @@
 //   A JSF template (layout.xhtml) that includes panel components via <ui:include>.
 //   App.jsx is the template; LiveFeed, HistoryTable, StatsChart are the included panels.
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import "./App.css";
 import usePlaybackFeed from "./hooks/usePlaybackFeed";
 import LiveFeed from "./components/LiveFeed";
@@ -32,13 +32,21 @@ import HistoryTable from "./components/HistoryTable";
 import StatsChart from "./components/StatsChart";
 import DebugPanel from "./components/DebugPanel";
 import SystemConsole from "./components/SystemConsole";
+import AnalyticsPanel from "./components/AnalyticsPanel";
 
 function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
-  // usePlaybackFeed is called here so events can be passed to StatsChart.
-  // The hook opens a WebSocket connection and returns live events.
-  // "connected" is also used for the global header status indicator.
+  // selectedScreen: "" means show all screens; any other value filters to that screen.
+  const [selectedScreen, setSelectedScreen] = useState("");
+
+  // Full live events from ActionCable WebSocket
   const { events, connected } = usePlaybackFeed();
+
+  // Derived: filtered events used by all dashboard panels
+  const filteredEvents = useMemo(() =>
+    selectedScreen ? events.filter((e) => e.screen_id === selectedScreen) : events,
+    [events, selectedScreen]
+  );
 
   return (
     <div className="app">
@@ -63,16 +71,23 @@ function App() {
       {/* ── Main layout ─────────────────────────────────────────── */}
       <main className="app-main">
         <div style={{ display: activeTab === "dashboard" ? "block" : "none", height: "100%" }}>
-          <div className="top-row">
-            <LiveFeed />
-            <StatsChart events={events} />
+          {/* Analytics KPI strip — receives ALL events for totals, but passes filter state down */}
+          <AnalyticsPanel
+            events={events}
+            selectedScreen={selectedScreen}
+            onScreenChange={setSelectedScreen}
+          />
+
+          <div className="top-row" style={{ marginTop: 16 }}>
+            <LiveFeed selectedScreen={selectedScreen} />
+            <StatsChart events={filteredEvents} />
           </div>
 
           <div className="bottom-row">
-            <HistoryTable />
+            <HistoryTable selectedScreen={selectedScreen} />
           </div>
 
-          <DebugPanel events={events} />
+          <DebugPanel events={filteredEvents} />
         </div>
 
         <div style={{ display: activeTab === "console" ? "block" : "none", height: "100%" }}>

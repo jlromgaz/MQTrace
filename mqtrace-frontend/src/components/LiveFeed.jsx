@@ -40,11 +40,14 @@ function formatTime(isoString) {
   return date.toLocaleTimeString("en-GB", { hour12: false });
 }
 
-function LiveFeed() {
-  // Destructure the values returned by our custom hook.
-  // events: array of playback event objects (newest first, max 50)
-  // connected: boolean — is the WebSocket connected?
-  const { events, connected } = usePlaybackFeed();
+// selectedScreen prop: when set, only events for that screen are shown.
+function LiveFeed({ selectedScreen = "" }) {
+  const { events: allEvents, connected } = usePlaybackFeed();
+
+  // Apply the global screen filter — empty string means "show all"
+  const events = selectedScreen
+    ? allEvents.filter((e) => e.screen_id === selectedScreen)
+    : allEvents;
 
   // useMemo caches this computation — only recalculates when `events` changes.
   // Without useMemo, React would re-run this on EVERY render, even unrelated ones.

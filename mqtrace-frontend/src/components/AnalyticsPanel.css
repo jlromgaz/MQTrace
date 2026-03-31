@@ -1,0 +1,115 @@
+/* AnalyticsPanel.css
+ * KPI card grid + screen filter styles for the MQTrace Analytics row.
+ * Designed to sit above the main dashboard top-row as a premium info strip.
+ */
+
+/* ── Analytics panel container ────────────────────────────── */
+.analytics-panel {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+
+/* ── KPI grid: 6 cards in a responsive single row ─────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 1200px) {
+  .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 700px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Individual KPI Card ──────────────────────────────────── */
+.kpi-card {
+  background-color: var(--bg-panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Coloured top accent bar derived from the accent class */
+.kpi-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 8px 8px 0 0;
+}
+
+.kpi-accent-blue::before   { background: var(--accent-blue); }
+.kpi-accent-green::before  { background: var(--accent-green); }
+.kpi-accent-orange::before { background: var(--accent-orange); }
+.kpi-accent-purple::before { background: #9b59b6; }
+.kpi-accent-teal::before   { background: #1abc9c; }
+
+.kpi-card:hover { border-color: rgba(79, 142, 247, 0.4); }
+
+.kpi-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.kpi-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0; /* allow text to truncate */
+}
+
+.kpi-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.kpi-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+/* ── Filter card — replaces kpi-value with a <select> ──────── */
+.kpi-filter-card { border-color: rgba(79, 142, 247, 0.25); }
+.kpi-filter-card::before { background: var(--accent-blue); }
+
+.kpi-select {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.kpi-select:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+}
