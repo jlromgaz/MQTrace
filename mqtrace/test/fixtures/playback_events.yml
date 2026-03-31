@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  screen_id: MyString
+  asset_name: MyString
+  started_at: 2026-03-31 09:04:42
+  duration_secs: 1
+
+two:
+  screen_id: MyString
+  asset_name: MyString
+  started_at: 2026-03-31 09:04:42
+  duration_secs: 1

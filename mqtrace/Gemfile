@@ -1,0 +1,77 @@
+source "https://rubygems.org"
+
+# Pin psych to the version bundled with Ruby 3.4.9 on Windows.
+# psych 5.3.1 (the latest) requires compiling libyaml from source, which fails
+# when the MSYS2 package keyring is not initialized. 5.2.2 ships pre-built with
+# the Ruby installer and works without compilation.
+gem "psych", "5.2.2"
+
+# Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
+gem "rails", "~> 8.1.3"
+# Use postgresql as the database for Active Record
+gem "pg", "~> 1.1"
+# Use the Puma web server [https://github.com/puma/puma]
+gem "puma", ">= 5.0"
+# Build JSON APIs with ease [https://github.com/rails/jbuilder]
+# gem "jbuilder"
+
+# Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
+# gem "bcrypt", "~> 3.1.7"
+
+# Windows does not include zoneinfo files, so bundle the tzinfo-data gem.
+# On Linux/macOS the OS provides timezone data; Windows does not, so this gem
+# provides it. The `platforms` constraint means it is only installed on Windows.
+gem "tzinfo-data", platforms: %i[ windows jruby ]
+
+# wdm (Windows Directory Monitor) enables Rails file-watching for auto-reload in development.
+# On Linux/macOS, Rails uses inotify/kqueue; on Windows it needs this gem.
+# :windows is the modern bundler platform name (replaces the deprecated :mingw/:mswin/:x64_mingw).
+gem "wdm", ">= 0.1.0", platforms: %i[ windows ]
+
+# Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
+gem "solid_cache"
+gem "solid_queue"
+gem "solid_cable"
+
+# Reduces boot times through caching; required in config/boot.rb
+gem "bootsnap", require: false
+
+# Deploy this application anywhere as a Docker container [https://kamal-deploy.org]
+gem "kamal", require: false
+
+# Add HTTP asset caching/compression and X-Sendfile acceleration to Puma [https://github.com/basecamp/thruster/]
+gem "thruster", require: false
+
+# Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
+gem "image_processing", "~> 1.2"
+
+# Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
+# This gem allows the React frontend (port 5173) to make API calls to the Rails backend (port 3000).
+# Without CORS, browsers block cross-origin requests by default (same-origin policy).
+# Equivalent concept to @CrossOrigin in Spring MVC or CorsConfiguration in Spring Security.
+gem "rack-cors"
+
+# MQTT client for Ruby — used by MqttSubscriberService to subscribe to the broker.
+# This is a pure Ruby implementation, no native extensions needed.
+# Equivalent to the Eclipse Paho MQTT client in Java.
+gem "mqtt"
+
+# Loads environment variables from a .env file into ENV[].
+# Equivalent to @Value("${prop}") reading from application.properties in Spring Boot,
+# but here you explicitly define vars in .env and they become available via ENV['VAR'].
+# Only active in development/test — in production, set ENV vars on the server directly.
+gem "dotenv-rails", groups: [:development, :test]
+
+group :development, :test do
+  # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
+  gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
+
+  # Audits gems for known security defects (use config/bundler-audit.yml to ignore issues)
+  gem "bundler-audit", require: false
+
+  # Static analysis for security vulnerabilities [https://brakemanscanner.org/]
+  gem "brakeman", require: false
+
+  # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
+  gem "rubocop-rails-omakase", require: false
+end

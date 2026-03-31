@@ -1,0 +1,31 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Rails (if not covered by inner .gitignore)
+*.sqlite3
+*.sqlite3-journal
+log/*
+tmp/*
+!tmp/cache/assets
+.env
+
+# Coverage and testing
+coverage/
+.nyc_output/
+
+# User exclusions
+mqtrace/context/
+.cursor/
+.claude/
+.agents/

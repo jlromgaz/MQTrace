@@ -1,0 +1,12 @@
+/* index.css — global base reset only.
+ * All application styles are in App.css.
+ * This file intentionally minimal to avoid overriding App.css variables. */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
