@@ -18,7 +18,7 @@
 // the SockJS client setup code you'd normally put in a useEffect directly.
 
 import { useMemo } from "react";
-import usePlaybackFeed from "../hooks/usePlaybackFeed";
+import { usePlayback } from "../context/PlaybackContext";
 
 // Color palette for the three screens.
 // Each screen gets a distinct left-border color for quick visual identification.
@@ -42,7 +42,9 @@ function formatTime(isoString) {
 
 // selectedScreen prop: when set, only events for that screen are shown.
 function LiveFeed({ selectedScreen = "" }) {
-  const { events: allEvents, connected } = usePlaybackFeed();
+  // Read from the shared context — same data as App.jsx and StatsChart.
+  // No separate WebSocket, no separate state, no possibility of reset.
+  const { events: allEvents, connected } = usePlayback();
 
   // Apply the global screen filter — empty string means "show all"
   const events = selectedScreen

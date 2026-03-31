@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import useSystemLogs from "../hooks/useSystemLogs";
+import { useSystemLogs } from "../context/SystemLogsContext";
 import "./SystemConsole.css";
 
 function SystemConsole() {

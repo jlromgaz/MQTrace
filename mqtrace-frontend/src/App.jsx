@@ -26,7 +26,7 @@
 
 import React, { useState, useMemo } from "react";
 import "./App.css";
-import usePlaybackFeed from "./hooks/usePlaybackFeed";
+import { usePlayback } from "./context/PlaybackContext";
 import LiveFeed from "./components/LiveFeed";
 import HistoryTable from "./components/HistoryTable";
 import StatsChart from "./components/StatsChart";
@@ -39,8 +39,8 @@ function App() {
   // selectedScreen: "" means show all screens; any other value filters to that screen.
   const [selectedScreen, setSelectedScreen] = useState("");
 
-  // Full live events from ActionCable WebSocket
-  const { events, connected } = usePlaybackFeed();
+  // Full live events from the shared PlaybackContext (single WebSocket, never resets)
+  const { events, connected } = usePlayback();
 
   // Derived: filtered events used by all dashboard panels
   const filteredEvents = useMemo(() =>
