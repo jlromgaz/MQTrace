@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "dev:full": "concurrently --names \"RAILS,VITE\" --prefix-colors \"magenta,cyan\" \"cd ../mqtrace && C:/Ruby34-x64/bin/rails.bat server\" \"vite\""
+    "dev:full": "concurrently --names \"RAILS,VITE\" --prefix-colors \"magenta,cyan\" \"cd ../mqtrace && bundle exec rails server\" \"vite\""
   },
   "dependencies": {
     "@rails/actioncable": "^8.1.300",

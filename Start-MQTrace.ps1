@@ -1,4 +1,4 @@
-# Start-MQTrace.ps1
+﻿# Start-MQTrace.ps1
 #
 # One-command launcher for the full MQTrace stack.
 #
@@ -25,8 +25,24 @@ Write-Host ""
 Write-Host "  MQTrace — Starting stack..." -ForegroundColor Cyan
 Write-Host ""
 
-# ── Step 1: Add Ruby and Node to PATH ────────────────────────────────────────
-$env:PATH = "C:\Ruby34-x64\bin;C:\Program Files\nodejs;" + $env:PATH
+# ── Step 1: Verify Dependencies (Ruby, Node) ─────────────────────────────────
+Write-Host "  [0/3] Checking Dependencies..." -ForegroundColor Yellow
+
+$rubyCmd = Get-Command "ruby" -ErrorAction SilentlyContinue
+if ($null -eq $rubyCmd) {
+    Write-Host "  ⚠  Ruby is not installed or not in PATH." -ForegroundColor Red
+    Write-Host "     Please install Ruby and add it to your System PATH to continue." -ForegroundColor DarkYellow
+    exit 1
+}
+
+$nodeCmd = Get-Command "node" -ErrorAction SilentlyContinue
+if ($null -eq $nodeCmd) {
+    Write-Host "  ⚠  Node.js is not installed or not in PATH." -ForegroundColor Red
+    Write-Host "     Please install Node.js and add it to your System PATH to continue." -ForegroundColor DarkYellow
+    exit 1
+}
+
+Write-Host "  ✓ Dependencies found: Ruby ($($rubyCmd.Version)), Node" -ForegroundColor Green
 
 # ── Step 2: Start Mosquitto if not running ────────────────────────────────────
 Write-Host "  [1/3] Checking Mosquitto MQTT broker..." -ForegroundColor Yellow
@@ -95,4 +111,11 @@ Write-Host "  Press Ctrl+C to stop everything." -ForegroundColor DarkGray
 Write-Host ""
 
 Set-Location (Join-Path $PSScriptRoot "mqtrace-frontend")
-& "C:\Program Files\nodejs\npm.cmd" run dev:full
+
+$npmCmd = Get-Command "npm" -ErrorAction SilentlyContinue
+if ($null -eq $npmCmd) {
+    Write-Host "  ⚠  NPM is not found in your PATH." -ForegroundColor Red
+    exit 1
+}
+
+& $npmCmd.Path run dev:full
