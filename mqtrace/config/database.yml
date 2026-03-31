@@ -20,12 +20,12 @@ default: &default
   # RAILS_MAX_THREADS defaults to 5 — matches Puma's thread count.
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   # Windows requires explicit host — Unix systems use a socket file by default
-  host: localhost
-  port: 5432
+  host:     <%= ENV.fetch("DB_HOST", "localhost") %>
+  port:     <%= ENV.fetch("DB_PORT", "5432") %>
   # DEVELOPMENT CREDENTIALS ONLY — never use these in production.
   # In production, use the DATABASE_URL environment variable instead.
-  username: admin
-  password: admin
+  username: <%= ENV.fetch("DB_USER", "mqtrace") %>
+  password: <%= ENV.fetch("DB_PASS", "mqtrace") %>
 
 development:
   <<: *default
