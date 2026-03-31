@@ -21,6 +21,7 @@
 // WebSocket handler read from — single source of truth.
 
 import { useMemo } from "react";
+import { usePlayback } from "../context/PlaybackContext";
 import {
   BarChart,
   Bar,
@@ -40,36 +41,28 @@ const SCREEN_COLORS = {
 };
 const DEFAULT_COLOR = "#9b59b6";
 
-// StatsChart receives `events` as a prop — an array of playback event objects.
-// Props in React are like method parameters: the parent passes data, the child
-// reads it (read-only — never modify props directly).
-function StatsChart({ events }) {
-  // useMemo computes the aggregated chart data only when `events` changes.
-  // Without useMemo, this reduce() would run on every render, including renders
-  // triggered by unrelated state changes in parent components.
-  //
-  // Java equivalent: a @Cacheable service method invalidated when the events list changes.
-  const chartData = useMemo(() => {
-    // Reduce the flat events array into a map of { screen_id → count }.
-    // Array.reduce() is like Java's Stream.collect(Collectors.groupingBy(..., counting()))
-    const counts = events.reduce((acc, event) => {
-      const key = event.screen_id;
-      acc[key] = (acc[key] || 0) + 1;
-      return acc;
-    }, {});
+// StatsChart reads screenCounts from the shared PlaybackContext accumulator.
+// This accumulator is never truncated by MAX_EVENTS, so the chart correctly
+// reflects ALL historical messages, not just the last 200 in the visible window.
+// selectedScreen filters the chart to a single screen if set.
+function StatsChart({ selectedScreen = "" }) {
+  const { aggregates, totalCount } = usePlayback();
 
-    // Convert the map to the array format Recharts expects:
-    // [{ screen: "screen-01", count: 12 }, { screen: "screen-02", count: 8 }, ...]
-    return Object.entries(counts)
+  const chartData = useMemo(() => {
+    const counts = aggregates.screenCounts || {};
+    const entries = selectedScreen
+      ? Object.entries(counts).filter(([screen]) => screen === selectedScreen)
+      : Object.entries(counts);
+    return entries
       .map(([screen, count]) => ({ screen, count }))
-      .sort((a, b) => a.screen.localeCompare(b.screen)); // Alphabetical order
-  }, [events]); // Recompute whenever the events array reference changes.
+      .sort((a, b) => a.screen.localeCompare(b.screen));
+  }, [aggregates.screenCounts, selectedScreen]);
 
   return (
     <div className="panel stats-chart-panel">
       <div className="panel-header">
         <h2>Playbacks per Screen</h2>
-        <span className="event-count">{events.length} events</span>
+        <span className="event-count">{totalCount.toLocaleString()} total</span>
       </div>
 
       {chartData.length === 0 ? (

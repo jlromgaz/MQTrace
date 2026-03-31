@@ -1,9 +1,30 @@
 # MQTrace
 
-Welcome to the **MQTrace** workspace! This is a full-stack real-time analytics application split into two primary components:
+> **Real-time MQTT playback monitoring for distributed digital signage networks.**
+> Built with Ruby on Rails 8, React + Vite, PostgreSQL, Mosquitto, and ActionCable WebSockets.
+
+📸 **[View the Live Demo & Capabilities →](DEMO.md)**
+
+MQTrace is a full-stack observability platform split into two primary components:
 
 - `mqtrace/`: Ruby on Rails 8 API backend orchestrating PostgreSQL, ActionCable, and MQTT messaging.
-- `mqtrace-frontend/`: React + Vite frontend dashboard for real-time visualization. (React Native mobile migration in progress).
+- `mqtrace-frontend/`: React + Vite frontend dashboard for real-time visualization.
+
+## 🏗️ Architecture
+
+```
+Digital Screens / Simulator
+        │ MQTT (QoS 1)
+        ▼
+  Mosquitto Broker
+        │
+        ▼
+Rails 8 MqttSubscriberService (background thread)
+        ├──▶ PostgreSQL (PlaybackEvent persistence)
+        └──▶ ActionCable WebSocket broadcast
+                  ├──▶ PlaybackChannel   → React Dashboard (KPIs, Live Feed, Chart)
+                  └──▶ SystemLogsChannel → System Console tab
+```
 
 ## 🛠️ System Prerequisites (Dependencies)
 To run this project natively, your machine must have the following core dependencies installed and exposed in your global system `PATH`:
@@ -55,3 +76,27 @@ If you cannot install Mosquitto locally, you can fallback to the public HiveMQ b
 ```
 MQTT_HOST=broker.hivemq.com
 ```
+
+## 📦 Mosquitto Configuration (M-03 — Recommended)
+
+To prevent message loss under high-throughput bursts, apply the included config file that raises Mosquitto's queue limits to 50,000 messages and enables persistent subscriber sessions.
+
+### Windows
+```powershell
+Copy-Item .\resources\mosquitto.conf "C:\Program Files\mosquitto\mosquitto.conf"
+Restart-Service mosquitto
+```
+
+### Ubuntu/Debian
+```bash
+sudo cp resources/mosquitto.conf /etc/mosquitto/conf.d/mqtrace.conf
+sudo systemctl restart mosquitto
+```
+
+### macOS (Homebrew)
+```bash
+cp resources/mosquitto.conf /usr/local/etc/mosquitto/mosquitto.conf
+brew services restart mosquitto
+```
+
+> **What this changes:** `max_queued_messages 50000` (was 100-1000 by default) + `persistent_client_expiration 1h` so the Rails subscriber's message queue survives brief disconnections.

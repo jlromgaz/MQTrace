@@ -26,7 +26,7 @@ const PlaybackContext = createContext({
   connected: false,
   totalCount: 0,
   msgsPerMin: 0,
-  aggregates: { mostPlayedVideo: "—", mostActiveScreen: "—", avgDuration: "—" },
+  aggregates: { mostPlayedVideo: "—", mostActiveScreen: "—", avgDuration: "—", screenCounts: {} },
 });
 
 export function PlaybackProvider({ children }) {
@@ -46,6 +46,7 @@ export function PlaybackProvider({ children }) {
     mostPlayedVideo: "—",
     mostActiveScreen: "—",
     avgDuration: "—",
+    screenCounts: {},
   });
 
   // Incoming message buffer — filled synchronously by the WebSocket callback.
@@ -85,7 +86,7 @@ export function PlaybackProvider({ children }) {
     setEvents((prev) => [...batch, ...prev].slice(0, MAX_EVENTS));
     setTotalCount(total);
     setMsgsPerMin(timestampsRef.current.length);
-    setAggregates({ mostPlayedVideo, mostActiveScreen, avgDuration });
+    setAggregates({ mostPlayedVideo, mostActiveScreen, avgDuration, screenCounts: { ...screenCountsRef.current } });
   }, []);
 
   useEffect(() => {

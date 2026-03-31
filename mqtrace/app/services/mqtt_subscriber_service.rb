@@ -39,16 +39,14 @@ class MqttSubscriberService
   MAX_RETRY_INTERVAL = 30
 
   def initialize
-    # Read broker config from environment variables.
-    # ENV.fetch raises a KeyError if the variable is missing AND no default is given.
-    # Here we provide defaults so the app works without a .env file for basic testing.
-    # Java equivalent: @Value("${mqtt.host:localhost}")
     @host    = ENV.fetch("MQTT_HOST", "localhost")
     @port    = ENV.fetch("MQTT_PORT", "1883").to_i
     @topic   = ENV.fetch("MQTT_TOPIC", "screens/+/playback")
-
-    # @running is an instance variable flag used to gracefully stop the loop.
-    # Set to false to stop the subscriber (e.g. in tests or on shutdown).
+    # M-03: Persistent client ID tells Mosquitto to preserve the message queue
+    # for this subscriber across reconnections.
+    # Without a fixed client_id, each reconnect creates a NEW anonymous session
+    # (clean_session: true by default) and ALL queued messages are discarded.
+    @client_id = ENV.fetch("MQTT_CLIENT_ID", "mqtrace-rails-subscriber")
     @running = true
   end
 
@@ -90,8 +88,18 @@ class MqttSubscriberService
   # When the connection drops, this method raises an exception which the
   # outer start() loop catches and handles.
   def connect_and_listen
-    broadcast_syslog(:info, "[MQTrace] Connecting to MQTT broker at #{@host}:#{@port}...")
-    client = MQTT::Client.connect(host: @host, port: @port)
+    broadcast_syslog(:info, "[MQTrace] Connecting to MQTT broker at #{@host}:#{@port} (client: #{@client_id})...")
+    # M-03: clean_session: false tells the broker to maintain a persistent session.
+    # If this subscriber disconnects and reconnects within persistent_client_expiration
+    # (configured in mosquitto.conf), all queued messages will be delivered on
+    # reconnect instead of being discarded. Combined with max_queued_messages 50000,
+    # this essentially eliminates message loss under normal burst conditions.
+    client = MQTT::Client.connect(
+      host: @host,
+      port: @port,
+      client_id: @client_id,
+      clean_session: false
+    )
     broadcast_syslog(:info, "[MQTrace] Connected. Subscribing to topic: #{@topic}")
     client.subscribe(@topic => 1)
     broadcast_syslog(:info, "[MQTrace] Listening for playback events...")

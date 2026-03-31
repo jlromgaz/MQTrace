@@ -28,7 +28,6 @@ import React, { useState, useMemo } from "react";
 import "./App.css";
 import { usePlayback } from "./context/PlaybackContext";
 import LiveFeed from "./components/LiveFeed";
-import HistoryTable from "./components/HistoryTable";
 import StatsChart from "./components/StatsChart";
 import DebugPanel from "./components/DebugPanel";
 import SystemConsole from "./components/SystemConsole";
@@ -80,11 +79,7 @@ function App() {
 
           <div className="top-row" style={{ marginTop: 16 }}>
             <LiveFeed selectedScreen={selectedScreen} />
-            <StatsChart events={filteredEvents} />
-          </div>
-
-          <div className="bottom-row">
-            <HistoryTable selectedScreen={selectedScreen} />
+            <StatsChart selectedScreen={selectedScreen} />
           </div>
 
           <DebugPanel events={filteredEvents} />
