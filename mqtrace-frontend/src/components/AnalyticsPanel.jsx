@@ -16,16 +16,10 @@ import { useMemo } from "react";
 import { usePlayback } from "../context/PlaybackContext";
 import "./AnalyticsPanel.css";
 
-// computeScreenOptions: derives filter options from the visible event window.
-// msgsPerMin is computed from the visible window too (last 60s activity).
+// computeLocalMetrics: derives screen filter options from the visible event window.
 function computeLocalMetrics(events) {
   const screenOptions = [...new Set(events.map((e) => e.screen_id))].sort();
-  const oneMinAgo = Date.now() - 60_000;
-  const msgsPerMin = events.filter((e) => {
-    const ts = e.created_at || e.started_at;
-    return ts && new Date(ts).getTime() > oneMinAgo;
-  }).length;
-  return { screenOptions, msgsPerMin };
+  return { screenOptions };
 }
 
 // ----------------------------------------------------------------------------
@@ -51,13 +45,11 @@ function KpiCard({ icon, label, value, accent }) {
 //   onScreenChange — callback to lift the filter state up to App.jsx
 // ----------------------------------------------------------------------------
 function AnalyticsPanel({ events, selectedScreen, onScreenChange }) {
-  // totalCount and aggregates come from the context accumulators —
-  // they are NEVER truncated by MAX_EVENTS, so they reflect all-time totals.
-  const { totalCount, aggregates } = usePlayback();
+  const { totalCount, msgsPerMin, aggregates } = usePlayback();
   const { mostPlayedVideo, mostActiveScreen, avgDuration } = aggregates;
 
-  // Local metrics computed from the visible event window
-  const { screenOptions, msgsPerMin } = useMemo(() => computeLocalMetrics(events), [events]);
+  // screenOptions from the visible window is fine — only used for dropdown
+  const { screenOptions } = useMemo(() => computeLocalMetrics(events), [events]);
 
   return (
     <div className="analytics-panel">

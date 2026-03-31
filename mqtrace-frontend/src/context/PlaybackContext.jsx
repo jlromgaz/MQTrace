@@ -25,6 +25,7 @@ const PlaybackContext = createContext({
   events: [],
   connected: false,
   totalCount: 0,
+  msgsPerMin: 0,
   aggregates: { mostPlayedVideo: "—", mostActiveScreen: "—", avgDuration: "—" },
 });
 
@@ -32,12 +33,15 @@ export function PlaybackProvider({ children }) {
   const [events, setEvents]         = useState([]);
   const [connected, setConnected]   = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+  const [msgsPerMin, setMsgsPerMin] = useState(0);
 
-  // Rolling aggregation accumulators — survive the MAX_EVENTS window.
-  // Stored in refs so they can be mutated without triggering extra renders.
+  // Rolling aggregation accumulators
   const assetCountsRef   = useRef({});
   const screenCountsRef  = useRef({});
   const totalDurationRef = useRef(0);
+  // Sliding window: stores the arrival timestamp (ms) of every message.
+  // We prune entries older than 60s on every flush to compute msgs/min.
+  const timestampsRef    = useRef([]);
   const [aggregates, setAggregates] = useState({
     mostPlayedVideo: "—",
     mostActiveScreen: "—",
@@ -55,26 +59,32 @@ export function PlaybackProvider({ children }) {
   // preventing render storms during high-throughput bursts.
   const flushQueue = useCallback(() => {
     rafRef.current = null;
-    const batch = queueRef.current.splice(0); // drain atomically
+    const batch = queueRef.current.splice(0);
     if (batch.length === 0) return;
 
     totalAddedRef.current += batch.length;
+    const now = Date.now();
 
-    // Update rolling aggregators with every message in the batch
+    // Update rolling aggregators
     batch.forEach((e) => {
       assetCountsRef.current[e.asset_name]  = (assetCountsRef.current[e.asset_name]  || 0) + 1;
       screenCountsRef.current[e.screen_id]  = (screenCountsRef.current[e.screen_id]  || 0) + 1;
       totalDurationRef.current += Number(e.duration_secs) || 0;
+      timestampsRef.current.push(now);
     });
+
+    // Prune timestamps older than 60 seconds for msgs/min calculation
+    const oneMinAgo = now - 60_000;
+    timestampsRef.current = timestampsRef.current.filter((t) => t > oneMinAgo);
 
     const total = totalAddedRef.current;
     const mostPlayedVideo  = Object.entries(assetCountsRef.current).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
     const mostActiveScreen = Object.entries(screenCountsRef.current).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
     const avgDuration      = (totalDurationRef.current / total).toFixed(1) + "s";
 
-    // Single batched state update — one render per frame regardless of burst size
     setEvents((prev) => [...batch, ...prev].slice(0, MAX_EVENTS));
     setTotalCount(total);
+    setMsgsPerMin(timestampsRef.current.length);
     setAggregates({ mostPlayedVideo, mostActiveScreen, avgDuration });
   }, []);
 
@@ -107,7 +117,7 @@ export function PlaybackProvider({ children }) {
   }, [flushQueue]);
 
   return (
-    <PlaybackContext.Provider value={{ events, connected, totalCount, aggregates }}>
+    <PlaybackContext.Provider value={{ events, connected, totalCount, msgsPerMin, aggregates }}>
       {children}
     </PlaybackContext.Provider>
   );
