@@ -56,5 +56,7 @@ echo -e "\e[90m  │  WebSocket  →  ws://localhost:3000/cable│\e[0m"
 echo -e "\e[90m  └─────────────────────────────────────────┘\e[0m"
 echo ""
 
+rm -f mqtrace/tmp/pids/server.pid 2>/dev/null || true
+
 cd mqtrace-frontend
 npm run dev:full

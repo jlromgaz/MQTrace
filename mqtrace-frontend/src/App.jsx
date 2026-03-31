@@ -24,14 +24,17 @@
 //   A JSF template (layout.xhtml) that includes panel components via <ui:include>.
 //   App.jsx is the template; LiveFeed, HistoryTable, StatsChart are the included panels.
 
+import React, { useState } from "react";
 import "./App.css";
 import usePlaybackFeed from "./hooks/usePlaybackFeed";
 import LiveFeed from "./components/LiveFeed";
 import HistoryTable from "./components/HistoryTable";
 import StatsChart from "./components/StatsChart";
 import DebugPanel from "./components/DebugPanel";
+import SystemConsole from "./components/SystemConsole";
 
 function App() {
+  const [activeTab, setActiveTab] = useState("dashboard");
   // usePlaybackFeed is called here so events can be passed to StatsChart.
   // The hook opens a WebSocket connection and returns live events.
   // "connected" is also used for the global header status indicator.
@@ -46,6 +49,10 @@ function App() {
           <span className="app-subtitle">Playback Monitoring Dashboard</span>
         </div>
         <div className="header-right">
+          <div className="tabs-container">
+            <button className={`tab-btn ${activeTab === "dashboard" ? "active" : ""}`} onClick={() => setActiveTab("dashboard")}>Dashboard</button>
+            <button className={`tab-btn ${activeTab === "console" ? "active" : ""}`} onClick={() => setActiveTab("console")}>System Console</button>
+          </div>
           {/* Global WebSocket status — driven by the hook above */}
           <span className={`header-status ${connected ? "status-connected" : "status-disconnected"}`}>
             {connected ? "● Live" : "○ Offline"}
@@ -55,29 +62,22 @@ function App() {
 
       {/* ── Main layout ─────────────────────────────────────────── */}
       <main className="app-main">
+        <div style={{ display: activeTab === "dashboard" ? "block" : "none", height: "100%" }}>
+          <div className="top-row">
+            <LiveFeed />
+            <StatsChart events={events} />
+          </div>
 
-        {/* Top row: Live Feed (left) + Stats Chart (right) */}
-        <div className="top-row">
-          {/* LiveFeed manages its own WebSocket subscription internally */}
-          <LiveFeed />
+          <div className="bottom-row">
+            <HistoryTable />
+          </div>
 
-          {/* StatsChart receives events as a prop — no separate API call needed.
-              In React, passing data from parent to child via props is called
-              "prop drilling". For two levels deep it's fine; deeper hierarchies
-              would use React Context. */}
-          <StatsChart events={events} />
+          <DebugPanel events={events} />
         </div>
 
-        {/* Bottom row: full-width history table */}
-        <div className="bottom-row">
-          <HistoryTable />
+        <div style={{ display: activeTab === "console" ? "block" : "none", height: "100%" }}>
+          <SystemConsole />
         </div>
-
-        {/* Debug panel — collapsible, at the bottom of the page.
-            Receives the live events array so it can compute metrics
-            (throughput, latency) without opening a second WebSocket. */}
-        <DebugPanel events={events} />
-
       </main>
     </div>
   );

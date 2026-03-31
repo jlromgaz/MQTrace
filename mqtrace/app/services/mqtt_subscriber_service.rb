@@ -65,18 +65,13 @@ class MqttSubscriberService
         retry_count = 0
 
       rescue MQTT::Exception, Errno::ECONNREFUSED, Errno::ETIMEDOUT => e
-        # These are expected network errors — broker is down or unreachable.
-        # Use exponential backoff: wait 1s, 2s, 4s, 8s, 16s, 30s (max).
-        # Java equivalent: RetryTemplate with ExponentialBackOffPolicy
         wait_time = [2**retry_count, MAX_RETRY_INTERVAL].min
-        Rails.logger.error "[MQTrace] MQTT connection lost: #{e.message}. Retrying in #{wait_time}s..."
+        broadcast_syslog(:error, "[MQTrace] MQTT connection lost: #{e.message}. Retrying in #{wait_time}s...")
         sleep wait_time
         retry_count += 1
-
       rescue => e
-        # Unexpected errors — log and wait a fixed interval before retrying.
-        Rails.logger.error "[MQTrace] Unexpected error in MQTT subscriber: #{e.class}: #{e.message}"
-        Rails.logger.error e.backtrace.first(5).join("\n")
+        broadcast_syslog(:error, "[MQTrace] Unexpected error in MQTT subscriber: #{e.class}: #{e.message}")
+        broadcast_syslog(:error, e.backtrace.first(5).join("\n"))
         sleep 5
       end
     end
@@ -95,22 +90,11 @@ class MqttSubscriberService
   # When the connection drops, this method raises an exception which the
   # outer start() loop catches and handles.
   def connect_and_listen
-    Rails.logger.info "[MQTrace] Connecting to MQTT broker at #{@host}:#{@port}..."
-
-    # MQTT::Client.connect opens a persistent TCP connection to the broker.
-    # The block form automatically closes the connection when the block exits.
-    # We do NOT use the block form here because we want to loop forever.
+    broadcast_syslog(:info, "[MQTrace] Connecting to MQTT broker at #{@host}:#{@port}...")
     client = MQTT::Client.connect(host: @host, port: @port)
-
-    Rails.logger.info "[MQTrace] Connected. Subscribing to topic: #{@topic}"
-
-    # Subscribe with QoS 1 (at least once delivery).
-    # QoS 1 means the broker retries delivery until it receives an ACK.
-    # This ensures we don't lose playback events if the subscriber is briefly slow.
-    # See docs/decisions/002_topic_structure.md for QoS rationale.
+    broadcast_syslog(:info, "[MQTrace] Connected. Subscribing to topic: #{@topic}")
     client.subscribe(@topic => 1)
-
-    Rails.logger.info "[MQTrace] Listening for playback events..."
+    broadcast_syslog(:info, "[MQTrace] Listening for playback events...")
 
     # client.get blocks and yields for each incoming message.
     # This is an infinite loop — it only exits when the connection drops.
@@ -149,17 +133,21 @@ class MqttSubscriberService
     # as_json converts the ActiveRecord object to a plain Ruby Hash (then to JSON).
     # Java equivalent: simpMessagingTemplate.convertAndSend("/topic/playback-events", event)
     ActionCable.server.broadcast("playback_events", event.as_json)
-
-    Rails.logger.info "[MQTrace] Saved and broadcast: #{event.screen_id} played #{event.asset_name} (#{event.duration_secs}s)"
+    broadcast_syslog(:info, "[MQTrace] Saved and broadcast: #{event.screen_id} played #{event.asset_name} (#{event.duration_secs}s)")
 
   rescue JSON::ParserError => e
-    # The message wasn't valid JSON — log and skip. Don't crash the subscriber.
-    Rails.logger.error "[MQTrace] Invalid JSON on topic #{topic}: #{e.message} | Raw: #{message}"
-
+    broadcast_syslog(:error, "[MQTrace] Invalid JSON on topic #{topic}: #{e.message} | Raw: #{message}")
   rescue ActiveRecord::RecordInvalid => e
-    # The payload was valid JSON but failed model validations.
-    # Log which field failed so it's easy to diagnose.
-    Rails.logger.error "[MQTrace] Validation failed for message on #{topic}: #{e.message}"
+    broadcast_syslog(:error, "[MQTrace] Validation failed for message on #{topic}: #{e.message}")
+  end
+
+  def broadcast_syslog(level, msg)
+    Rails.logger.send(level, msg)
+    ActionCable.server.broadcast("system_logs", {
+      timestamp: Time.current.iso8601,
+      level: level,
+      message: msg
+    }) rescue nil
   end
 
 end

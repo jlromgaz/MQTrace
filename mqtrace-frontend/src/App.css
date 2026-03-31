@@ -58,6 +58,40 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.tabs-container {
+  display: flex;
+  gap: 0.5rem;
+  background: #1e293b;
+  padding: 0.25rem;
+  border-radius: 8px;
+}
+
+.tab-btn {
+  background: transparent;
+  color: #94a3b8;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  color: #e2e8f0;
+}
+
+.tab-btn.active {
+  background: #3b82f6;
+  color: white;
+}
+
 .header-left {
   display: flex;
   align-items: baseline;

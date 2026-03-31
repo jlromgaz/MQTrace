@@ -1,0 +1,84 @@
+.system-console {
+  background: #0f172a;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  margin: 1rem;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+  color: #a8b2d1;
+  font-family: 'Consolas', 'Courier New', Courier, monospace;
+}
+
+.console-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  border-radius: 8px 8px 0 0;
+}
+
+.console-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.terminal-icon {
+  color: #10b981;
+  font-weight: bold;
+}
+
+.status-badge {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.status-badge.online {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.status-badge.offline {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.console-window {
+  padding: 1rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.log-row {
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.log-time {
+  color: #64748b;
+  margin-right: 0.5rem;
+}
+
+.log-level {
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+.log-row.info .log-level { color: #3b82f6; }
+.log-row.error .log-level { color: #ef4444; }
+.log-row.warn .log-level { color: #eab308; }
+
+.log-row.error .log-message { color: #fca5a5; }
+.log-row.warn .log-message { color: #fde047; }

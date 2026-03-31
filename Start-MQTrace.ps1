@@ -112,6 +112,10 @@ Write-Host ""
 
 Set-Location (Join-Path $PSScriptRoot "mqtrace-frontend")
 
+# ── Clean Stale PIDs ────────────────────────────────────────────────────────
+$pidFile = Join-Path $PSScriptRoot "mqtrace\tmp\pids\server.pid"
+if (Test-Path $pidFile) { Remove-Item $pidFile -Force -ErrorAction SilentlyContinue }
+
 $npmCmd = Get-Command "npm" -ErrorAction SilentlyContinue
 if ($null -eq $npmCmd) {
     Write-Host "  ⚠  NPM is not found in your PATH." -ForegroundColor Red
